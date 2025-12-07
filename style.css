@@ -1,1 +1,353 @@
+/* ===== BASE RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Fira Code', monospace;
+  color: #00ff99;
+}
+
+body, html {
+  height: 100%;
+  width: 100%;
+  background-color: #0a0a0a;
+  overflow: hidden;
+}
+
+/* ===== DESKTOP BACKGROUND ===== */
+#desktop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #111111 0%, #000000 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===== TERMINAL WINDOW ===== */
+#terminal-window {
+  width: 800px;
+  max-width: 90%;
+  height: 500px;
+  background-color: rgba(0,0,0,0.95);
+  border: 2px solid #00ff99;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 20px #00ff99, 0 0 40px #00ff99 inset;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease-in-out;
+}
+
+/* ===== TERMINAL HEADER ===== */
+#terminal-header {
+  height: 35px;
+  background-color: rgba(0,255,153,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid #00ff99;
+  user-select: none;
+}
+
+#terminal-title {
+  font-weight: bold;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+#terminal-controls button {
+  background: transparent;
+  border: none;
+  color: #00ff99;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+#terminal-controls button:hover {
+  color: #0ff;
+  transform: scale(1.1);
+}
+
+/* ===== TERMINAL BODY ===== */
+#terminal-body {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  line-height: 1.3rem;
+  position: relative;
+}
+
+#terminal-history {
+  white-space: pre-wrap;
+}
+
+/* ===== TERMINAL INPUT ROW ===== */
+#terminal-input-row {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+}
+
+#terminal-prompt {
+  margin-right: 6px;
+  color: #00ff99;
+  transition: all 0.2s ease-in-out;
+}
+
+#terminal-prompt.prompt-active {
+  color: #0ff;
+  text-shadow: 0 0 6px #0ff, 0 0 12px #0ff;
+}
+
+#terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #00ff99;
+  font-family: 'Fira Code', monospace;
+  font-size: 1rem;
+  caret-color: #0ff;
+}
+
+/* ===== TERMINAL STATUS BAR ===== */
+#terminal-status {
+  height: 24px;
+  background: rgba(0,255,153,0.05);
+  border-top: 1px solid #00ff99;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+/* ===== TERMINAL BODY GLOW ===== */
+#terminal-body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,255,153,0.05) 0px,
+    rgba(0,255,153,0.05) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  animation: scanline 0.5s infinite;
+}
+
+/* ===== CURSOR ANIMATION ===== */
+#terminal-input {
+  caret-color: #0ff;
+  animation: blink-caret 1s step-end infinite;
+}
+
+/* ===== NEON GLOW EFFECTS ===== */
+#terminal-window[data-glow="true"] {
+  box-shadow: 0 0 20px #00ff99, 0 0 40px #00ff99 inset;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+#terminal-window[data-hover="true"] {
+  box-shadow: 0 0 30px #0ff, 0 0 60px #0ff inset;
+}
+
+/* ===== SCANLINE ANIMATION ===== */
+@keyframes scanline {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 2px; }
+}
+
+/* ===== BLINKING CARET ===== */
+@keyframes blink-caret {
+  0%, 50%, 100% { border-right-color: #0ff; }
+  25%, 75% { border-right-color: transparent; }
+}
+
+/* ===== TERMINAL LINES HOVER GLOW ===== */
+.terminal-line:hover {
+  color: #0ff;
+  text-shadow: 0 0 6px #0ff, 0 0 12px #0ff;
+}
+/* ===== NOTES OUTPUT ===== */
+.note-index {
+  color: #0ff;
+  font-weight: bold;
+  text-shadow: 0 0 4px #0ff, 0 0 8px #0ff;
+}
+
+.note-text {
+  color: #00ff99;
+  transition: all 0.2s ease-in-out;
+}
+
+.note-text:hover {
+  color: #0ff;
+  text-shadow: 0 0 6px #0ff, 0 0 12px #0ff;
+  cursor: pointer;
+}
+
+/* ===== PROJECTS OUTPUT ===== */
+.project-index {
+  color: #ff00ff;
+  font-weight: bold;
+  text-shadow: 0 0 4px #ff00ff, 0 0 8px #ff00ff;
+}
+
+.project-name {
+  color: #00ffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.project-name:hover {
+  color: #0ff;
+  text-shadow: 0 0 6px #0ff, 0 0 12px #0ff;
+  cursor: pointer;
+}
+
+/* ===== TERMINAL SECTION SEPARATORS ===== */
+.terminal-line.separator {
+  display: block;
+  height: 1px;
+  margin: 6px 0;
+  background: rgba(0,255,153,0.2);
+}
+
+/* ===== OPTIONAL LINE HIGHLIGHT ===== */
+.terminal-line.highlight {
+  background-color: rgba(0,255,153,0.05);
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: all 0.2s ease-in-out;
+}
+
+.terminal-line.highlight:hover {
+  background-color: rgba(0,255,153,0.2);
+  box-shadow: 0 0 6px #0ff;
+}
+/* ===== TERMINAL PROMPT NEON ANIMATION ===== */
+#terminal-prompt.prompt-active {
+  animation: prompt-glow 1.5s infinite alternate;
+}
+
+@keyframes prompt-glow {
+  0% { color: #0ff; text-shadow: 0 0 4px #0ff, 0 0 8px #0ff; }
+  50% { color: #0ff; text-shadow: 0 0 8px #0ff, 0 0 16px #0ff; }
+  100% { color: #0ff; text-shadow: 0 0 12px #0ff, 0 0 24px #0ff; }
+}
+
+/* ===== TERMINAL INPUT HIGHLIGHT ===== */
+#terminal-input:focus {
+  outline: none;
+  border-bottom: 1px solid #0ff;
+  box-shadow: 0 0 6px #0ff inset;
+  transition: all 0.2s ease-in-out;
+}
+
+/* ===== STATUS BAR NEON HOVER ===== */
+#terminal-status {
+  transition: all 0.3s ease-in-out;
+}
+
+#terminal-status:hover {
+  color: #0ff;
+  text-shadow: 0 0 4px #0ff, 0 0 12px #0ff;
+}
+
+/* ===== TERMINAL HEADER BUTTONS HOVER ===== */
+#terminal-controls button:hover {
+  text-shadow: 0 0 6px #0ff, 0 0 12px #0ff;
+  transform: scale(1.2);
+}
+/* ===== CRT FLICKER ANIMATION ===== */
+@keyframes crt-flicker {
+  0% { opacity: 0.95; }
+  5% { opacity: 0.9; }
+  10% { opacity: 0.97; }
+  15% { opacity: 0.93; }
+  20% { opacity: 0.98; }
+  25% { opacity: 0.94; }
+  30% { opacity: 0.99; }
+  100% { opacity: 0.95; }
+}
+
+#terminal-window::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,255,153,0.02) 0px,
+    rgba(0,255,153,0.02) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  animation: scanline 0.5s infinite, crt-flicker 0.1s infinite;
+}
+
+/* ===== NEON SHADOW PULSE ===== */
+#terminal-window[data-glow="true"] {
+  animation: neon-pulse 2s infinite alternate;
+}
+
+@keyframes neon-pulse {
+  0% { box-shadow: 0 0 20px #00ff99, 0 0 40px #00ff99 inset; }
+  50% { box-shadow: 0 0 25px #0ff, 0 0 50px #0ff inset; }
+  100% { box-shadow: 0 0 30px #00ff99, 0 0 60px #00ff99 inset; }
+}
+
+/* ===== RESPONSIVE TERMINAL ===== */
+@media (max-width: 900px) {
+  #terminal-window {
+    width: 95%;
+    height: 400px;
+  }
+}
+
+@media (max-width: 600px) {
+  #terminal-window {
+    width: 100%;
+    height: 300px;
+    border-radius: 0;
+    box-shadow: 0 0 12px #0ff, 0 0 24px #0ff inset;
+  }
+}
+
+/* ===== FINAL TOUCHES ===== */
+body::before {
+  content: '';
+  position: fixed;
+  width: 100%; height: 100%;
+  top: 0; left: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(0,255,153,0.02) 0%, transparent 70%);
+}
+
+#terminal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+#terminal-body::-webkit-scrollbar-thumb {
+  background: #0ff;
+  border-radius: 3px;
+}
+
+#terminal-body::-webkit-scrollbar-track {
+  background: rgba(0,255,153,0.05);
+}
 
