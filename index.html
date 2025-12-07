@@ -1,1 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>andrfp.co — TOSX Boot + Login</title>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<main id="boot-root" aria-live="polite">
+  <section id="boot-screen" data-state="booting" role="region" aria-label="Boot screen">
+    <pre id="boot-log" aria-hidden="false" style="white-space:pre-wrap; font-family:monospace;">
+Initializing TOSX — andrfp.co
+</pre>
+
+    <!-- Login Panel -->
+    <div id="login-panel" aria-hidden="true">
+      <div id="login-prompt" role="form" aria-labelledby="login-title">
+        <h2 id="login-title">LOGIN</h2>
+        <p id="login-instruction">Enter username to unlock the terminal.</p>
+        <label for="login-input" class="sr-only">Username</label>
+        <input id="login-input" type="text" inputmode="text" autocomplete="username" aria-label="username" />
+        <div id="login-actions" aria-live="polite" style="margin-top:8px"></div>
+        <div id="login-hint" aria-hidden="false" style="margin-top:8px">
+          Tip: use <code>andrfp.co</code> as the username.
+        </div>
+        <div id="login-status" role="status" aria-live="assertive" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MAIN APP HIDDEN -->
+<div id="app-root" hidden aria-hidden="true">
+  <section id="terminal-root" role="application" aria-label="Terminal">
+    <div id="terminal-history" aria-live="polite" style="white-space:pre-wrap; font-family:monospace;"></div>
+    <div id="terminal-input-row">
+      <span id="terminal-prompt">andrfp:~$</span>
+      <input id="terminal-input" type="text" autocomplete="off" aria-label="terminal input" />
+    </div>
+  </section>
+</div>
+
+<script>
+// Boot + Login JS
+(function(){
+  const bootLog = document.getElementById('boot-log');
+  const loginPanel = document.getElementById('login-panel');
+  const loginInput = document.getElementById('login-input');
+  const loginStatus = document.getElementById('login-status');
+  const appRoot = document.getElementById('app-root');
+  const bootScreen = document.getElementById('boot-screen');
+
+  const BOOT_LINES = [
+    "POST: CPU.. OK",
+    "POST: MEM.. OK",
+    "POST: GPU.. OK",
+    "Mounting virtual FS...",
+    "Loading kernel modules: [init] [term] [ui] ...",
+    "Network: offline (local-only SPA)",
+    "Security: sandbox ok",
+    "User agent: " + navigator.userAgent.split(' ')[0],
+    "Welcome to TOSX — terminal SPA by andrfp.co"
+  ];
+
+  function playBootSequence(lines, opts = {}) {
+    const delay = opts.delay || 120;
+    let i = 0;
+    function next() {
+      if(i >= lines.length){ finishBoot(); return; }
+      bootLog.textContent += "\n" + lines[i++];
+      if (bootLog.parentElement) bootLog.parentElement.scrollTop = bootLog.parentElement.scrollHeight;
+      setTimeout(next, delay + Math.random()*delay);
+    }
+    setTimeout(next, 250);
+  }
+
+  function finishBoot(){
+    bootScreen.setAttribute('data-state','login');
+    loginPanel.setAttribute('aria-hidden','false');
+    setTimeout(()=> loginInput.focus(), 50);
+    bootLog.textContent += "\n\n-- login required --";
+  }
+
+  const VALID_USERNAME = "andrfp.co";
+  let failureCount = 0;
+
+  function handleLoginAttempt(rawName){
+    const name = (rawName || '').trim();
+    if(!name){ loginStatus.textContent="Please enter a username."; return; }
+    if(name === VALID_USERNAME){
+      loginStatus.textContent="Access granted. Booting terminal...";
+      setTimeout(() => {
+        revealApp(name);
+        window.dispatchEvent(new CustomEvent('tosx:loginSuccess',{detail:{username:name}}));
+      },700);
+    } else {
+      failureCount++;
+      loginStatus.textContent="Access denied. Invalid username.";
+      bootLog.textContent += "\n[auth] failed login attempt: " + name;
+      if(failureCount >= 3){
+        bootLog.textContent += "\n[hint] username looks like a domain: try 'andrfp.co'";
+        window.dispatchEvent(new CustomEvent('tosx:loginFailure',{detail:{attempt:failureCount,last:name}}));
+      }
+    }
+  }
+
+  function revealApp(username){
+    bootScreen.style.display = 'none';
+    appRoot.hidden = false;
+    appRoot.removeAttribute('aria-hidden');
+    const th = document.getElementById('terminal-history');
+    th.textContent = `Welcome ${username}. Type 'help' to begin.\n`;
+    document.getElementById('terminal-input').focus();
+  }
+
+  loginInput.addEventListener('keydown', ev => {
+    if(ev.key==='Enter'){
+      handleLoginAttempt(loginInput.value);
+      loginInput.value='';
+    }
+  });
+
+  loginInput.addEventListener('paste', ev => {
+    setTimeout(()=>{
+      const val = loginInput.value.trim();
+      if(val && val === VALID_USERNAME){
+        handleLoginAttempt(val);
+        loginInput.value='';
+      }
+    },80);
+  });
+
+  playBootSequence(BOOT_LINES,{delay:100});
+})();
+</script>
+
+</body>
+</html>
 
