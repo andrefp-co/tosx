@@ -1,3 +1,34 @@
+/* main.js — TOSX SPA core
+   Boot + Login + Terminal engine + Commands + Notes + Projects
+   Put this file in the repo root as main.js
+*/
+
+(function () {
+  "use strict";
+
+  /* ======= Config ======= */
+  const CONFIG = {
+    validUsername: "andrfp.co",
+    notesStorageKey: "tosx_notes",
+    projectsUrl: "projects.json",
+    initialNotesUrl: "notes.json",
+    bootDelayMs: 80
+  };
+
+  /* ======= DOM Refs ======= */
+  const $ = selector => document.querySelector(selector);
+  const bootLogEl = $("#boot-log");
+  const loginPanelEl = $("#login-panel");
+  const loginInputEl = $("#login-input");
+  const loginStatusEl = $("#login-status");
+  const appRootEl = $("#app-root");
+  const terminalHistoryEl = $("#terminal-history");
+  const terminalInputEl = $("#terminal-input");
+  const terminalBoxEl = $("#terminal-box");
+  const notesContainerEl = $("#notes-container");
+  const notesEditorEl = $("#notes-editor");
+  const notesStatusEl = $("#notes-status");
+
 <script>
 // Boot + Login JS
 (function(){
