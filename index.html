@@ -393,6 +393,177 @@ Initializing TOSX — andrfp.co
   };
 })();
 
+// Boot + Login Enhancements
+(function(){
+  const bootLog = document.getElementById('boot-log');
+  const loginPanel = document.getElementById('login-panel');
+  const loginInput = document.getElementById('login-input');
+
+  // Blinking cursor
+  const cursorChar = "_";
+  let cursorVisible = true;
+  setInterval(() => {
+    if(document.hidden) return; // stop when tab inactive
+    if(bootLog){
+      if(cursorVisible){
+        bootLog.textContent = bootLog.textContent.replace(cursorChar,'') + cursorChar;
+      } else {
+        bootLog.textContent = bootLog.textContent.replace(cursorChar,'');
+      }
+      cursorVisible = !cursorVisible;
+    }
+  }, 500);
+
+  // Fade-in login panel smoothly after boot
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(m => {
+      if(m.target.getAttribute('data-state') === 'login'){
+        loginPanel.style.opacity = 0;
+        loginPanel.style.transition = "opacity 0.6s ease-in-out";
+        loginPanel.removeAttribute('aria-hidden');
+        setTimeout(()=> loginPanel.style.opacity = 1, 50);
+      }
+    });
+  });
+  const bootScreen = document.getElementById('boot-screen');
+  observer.observe(bootScreen, { attributes: true, attributeFilter: ['data-state'] });
+
+  // Optional: subtle beep on login attempt
+  loginInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      const audio = new Audio("https://freesound.org/data/previews/341/341695_62460-lq.mp3"); // tiny beep
+      audio.volume = 0.1;
+      audio.play().catch(()=>{});
+    }
+  });
+// Terminal Output Enhancements
+(function(){
+  const historyEl = document.getElementById('terminal-history');
+
+  // Wrap output lines in spans for styling later
+  function formatOutput(text, type='normal'){
+    const lines = text.split('\n');
+    return lines.map(line => `<span class="terminal-line ${type}">${line}</span>`).join('\n');
+  }
+
+  // Override appendHistory to format
+  const originalAppend = window.appendHistory;
+  window.appendHistory = function(text, type='normal'){
+    if(!text) return;
+    const formatted = formatOutput(text, type);
+    historyBuffer.push(formatted);
+    historyEl.innerHTML = historyBuffer.join('<br>'); // use <br> to separate lines
+    historyEl.scrollTop = historyEl.scrollHeight;
+  };
+
+  // Example: highlight project or note names
+  const originalProjectsAction = COMMANDS.projects.action;
+  COMMANDS.projects.action = async function(args=[]){
+    let output = await originalProjectsAction(args);
+    if(output && !output.startsWith('[projects]')){
+      // Highlight project names
+      output = output.replace(/^(\d+): (.+)$/gm, '<span class="project-index">$1</span>: <span class="project-name">$2</span>');
+    }
+    return output;
+  };
+
+  // Highlight notes numbers
+  const originalNotesAction = COMMANDS.notes.action;
+  COMMANDS.notes.action = async function(args=[]){
+    let output = await originalNotesAction(args);
+    if(output && !output.startsWith('[notes]')){
+      output = output.replace(/^(\d+): (.+)$/gm, '<span class="note-index">$1</span>: <span class="note-text">$2</span>');
+    }
+    return output;
+  };
+})();
+// Interactive Commands & Easter Eggs
+(function(){
+  // Extend 'about' command with hidden easter egg
+  const aboutCmd = COMMANDS.about;
+  const originalAbout = aboutCmd.action;
+
+  aboutCmd.action = async function(args=[]){
+    if(args[0] && args[0].toLowerCase() === 'secret'){
+      return "👾 You found the hidden TOSX easter egg! Keep exploring and hacking.";
+    }
+    return await originalAbout(args);
+  };
+
+  // Extend 'projects' with 'random' subcommand
+  const projectsCmd = COMMANDS.projects;
+  const originalProjects = projectsCmd.action;
+
+  projectsCmd.action = async function(args=[]){
+    if(args[0] && args[0].toLowerCase() === 'random'){
+      try {
+        const res = await fetch('data/projects.json');
+        const projects = await res.json();
+        if(!projects.length) return "[projects] no projects yet";
+        const rand = projects[Math.floor(Math.random()*projects.length)];
+        return `Random Project → ${rand.name}: ${rand.description}`;
+      } catch(e){
+        return "[projects] failed to load";
+      }
+    }
+    return await originalProjects(args);
+  };
+
+  // Extend 'clear' with optional reset
+  const clearCmd = COMMANDS.clear;
+  const originalClear = clearCmd.action;
+
+  clearCmd.action = async function(args=[]){
+    if(args[0] && args[0].toLowerCase() === 'reset'){
+      historyBuffer.length = 0;
+      localStorage.clear();
+      return "[terminal] reset complete. Reloading SPA...";
+    }
+    return await originalClear(args);
+  };
+
+})();
+// Final UX Enhancements
+(function(){
+  const input = document.getElementById('terminal-input');
+  const historyEl = document.getElementById('terminal-history');
+
+  // Auto-focus input on page load
+  window.addEventListener('load', () => {
+    input.focus();
+  });
+
+  // Smooth scroll terminal history
+  const originalAppend = window.appendHistory;
+  window.appendHistory = function(text, type='normal'){
+    if(!text) return;
+    if(originalAppend) originalAppend(text, type);
+    historyEl.scrollTo({
+      top: historyEl.scrollHeight,
+      behavior: 'smooth'
+    });
+  };
+
+  // Terminal prompt animations
+  const prompt = document.getElementById('terminal-prompt');
+  input.addEventListener('focus', () => {
+    prompt.classList.add('prompt-active');
+  });
+  input.addEventListener('blur', () => {
+    prompt.classList.remove('prompt-active');
+  });
+
+  // Optional: subtle hover effects on terminal window
+  const termWindow = document.getElementById('terminal-window');
+  termWindow.addEventListener('mouseenter', () => {
+    termWindow.dataset.hover = "true";
+  });
+  termWindow.addEventListener('mouseleave', () => {
+    termWindow.dataset.hover = "false";
+  });
+
+})();
+
 </script>
 </body>
 </html>
