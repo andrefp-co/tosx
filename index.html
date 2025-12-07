@@ -134,8 +134,240 @@ Initializing TOSX — andrfp.co
 
   playBootSequence(BOOT_LINES,{delay:100});
 })();
-</script>
+  // Terminal Engine
+(function(){
+  const input = document.getElementById('terminal-input');
+  const history = document.getElementById('terminal-history');
+  const PROMPT = "andrfp:~$";
 
+  const COMMANDS = {
+    help: {
+      desc: "List available commands",
+      action: () => {
+        return Object.keys(COMMANDS)
+          .map(c=>`${c} - ${COMMANDS[c].desc}`).join('\n');
+      }
+    },
+    about: {
+      desc: "About this SPA terminal",
+      action: () => "TOSX Terminal SPA by andrfp.co — clean professional + hacker hybrid OS."
+    },
+    projects: {
+      desc: "List your projects from JSON",
+      action: async () => {
+        try {
+          const res = await fetch('data/projects.json');
+          const projects = await res.json();
+          if(!projects.length) return "[projects] no projects yet";
+          return projects.map(p=>`- ${p.name}: ${p.description}`).join('\n');
+        } catch(e){
+          return "[projects] failed to load";
+        }
+      }
+    },
+    notes: {
+      desc: "Local notes app (saved in localStorage)",
+      action: () => {
+        let notes = JSON.parse(localStorage.getItem('tosx_notes')||'[]');
+        if(!notes.length) return "[notes] no notes yet";
+        return notes.map((n,i)=>`${i+1}: ${n}`).join('\n');
+      }
+    },
+    clear: {
+      desc: "Clear terminal screen",
+      action: () => {
+        history.textContent='';
+        return '';
+      }
+    },
+    docs: {
+      desc: "Open TOSX documentation (sample)",
+      action: () => "Docs: https://github.com/andrfp-co/tosx/blob/main/README.md"
+    }
+  };
+
+  const historyBuffer = [];
+
+  function appendHistory(text){
+    if(!text) return;
+    historyBuffer.push(text);
+    history.textContent = historyBuffer.join('\n');
+    history.scrollTop = history.scrollHeight;
+  }
+
+  async function executeCommand(cmd){
+    cmd = (cmd||'').trim();
+    if(!cmd) return;
+    appendHistory(PROMPT+" "+cmd);
+
+    const [base, ...args] = cmd.split(' ');
+    if(COMMANDS[base]){
+      const result = await COMMANDS[base].action(args);
+      if(result) appendHistory(result);
+    } else {
+      appendHistory(`[error] command not found: ${base}`);
+    }
+  }
+
+  // Autocomplete: tab key
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      executeCommand(input.value);
+      input.value='';
+    } else if(e.key === 'Tab'){
+      e.preventDefault();
+      const val = input.value.trim();
+      const matches = Object.keys(COMMANDS).filter(c=>c.startsWith(val));
+      if(matches.length===1){
+        input.value = matches[0]+' ';
+      } else if(matches.length>1){
+        appendHistory(matches.join('    '));
+      }
+    }
+  });
+
+  // Initialize
+  window.addEventListener('tosx:loginSuccess',()=> {
+    appendHistory("Type 'help' to see commands.");
+  });
+})();
+  // Notes App Integration
+(function(){
+  const LOCAL_STORAGE_KEY = 'tosx_notes';
+
+  function getNotes(){
+    return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+  }
+
+  function saveNotes(notes){
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(notes));
+  }
+
+  // Extend COMMANDS.notes to accept subcommands
+  const NOTES_COMMAND = COMMANDS.notes;
+  const originalAction = NOTES_COMMAND.action;
+
+  NOTES_COMMAND.action = async (args=[]) => {
+    const notes = getNotes();
+    if(args.length===0){
+      // no args, default list behavior
+      return originalAction();
+    }
+
+    const subcmd = args[0].toLowerCase();
+    switch(subcmd){
+      case 'add':
+        const note = args.slice(1).join(' ');
+        if(!note) return "[notes] usage: notes add <text>";
+        notes.push(note);
+        saveNotes(notes);
+        return `[notes] added note #${notes.length}`;
+      case 'del':
+      case 'delete':
+        const index = parseInt(args[1]);
+        if(isNaN(index) || index < 1 || index > notes.length)
+          return "[notes] invalid index";
+        const removed = notes.splice(index-1,1);
+        saveNotes(notes);
+        return `[notes] deleted note #${index}: ${removed}`;
+      case 'edit':
+        const idx = parseInt(args[1]);
+        if(isNaN(idx) || idx < 1 || idx > notes.length) return "[notes] invalid index";
+        const newText = args.slice(2).join(' ');
+        if(!newText) return "[notes] usage: notes edit <index> <text>";
+        notes[idx-1] = newText;
+        saveNotes(notes);
+        return `[notes] edited note #${idx}`;
+      case 'clear':
+        saveNotes([]);
+        return "[notes] all notes cleared";
+      default:
+        return "[notes] unknown subcommand. Use: add|del|edit|clear";
+    }
+  };
+})();
+// Projects App Integration
+(function(){
+  const PROJECTS_COMMAND = COMMANDS.projects;
+  const PROJECTS_URL = 'data/projects.json';
+
+  // Extend the projects command to allow "projects open <index>"
+  const originalProjectsAction = PROJECTS_COMMAND.action;
+
+  PROJECTS_COMMAND.action = async (args=[]) => {
+    let projects = [];
+    try {
+      const res = await fetch(PROJECTS_URL);
+      projects = await res.json();
+    } catch(e){
+      return "[projects] failed to load projects.json";
+    }
+
+    if(args.length === 0){
+      // default list view
+      if(!projects.length) return "[projects] no projects yet";
+      return projects.map((p,i)=>`${i+1}: ${p.name}`).join('\n') + "\nUse 'projects open <number>' to view details";
+    }
+
+    const subcmd = args[0].toLowerCase();
+    if(subcmd === 'open'){
+      const index = parseInt(args[1]);
+      if(isNaN(index) || index < 1 || index > projects.length)
+        return "[projects] invalid project number";
+      const p = projects[index-1];
+      return `--- Project #${index} ---\nName: ${p.name}\nDescription: ${p.description}\nLink: ${p.link||'N/A'}`;
+    } else {
+      return "[projects] unknown subcommand. Use: open <number>";
+    }
+  };
+})();
+// Terminal History & Enhanced Autocomplete
+(function(){
+  const input = document.getElementById('terminal-input');
+  const historyBuffer = []; // already defined in PART 2, safe to reuse
+  let commandHistory = [];
+  let historyIndex = -1;
+
+  // Listen to keydown for arrow navigation
+  input.addEventListener('keydown', e => {
+    if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      if(commandHistory.length === 0) return;
+      historyIndex = historyIndex <= 0 ? 0 : historyIndex-1;
+      input.value = commandHistory[historyIndex];
+    } else if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      if(commandHistory.length === 0) return;
+      historyIndex = historyIndex >= commandHistory.length-1 ? commandHistory.length-1 : historyIndex+1;
+      input.value = commandHistory[historyIndex] || '';
+    } else if(e.key === 'Tab'){
+      e.preventDefault();
+      const val = input.value.trim();
+      const matches = Object.keys(COMMANDS).filter(c=>c.startsWith(val));
+      if(matches.length === 1){
+        input.value = matches[0]+' ';
+      } else if(matches.length > 1){
+        // Cycle through matches if multiple
+        const current = input.dataset.tabMatch || '';
+        let idx = matches.indexOf(current);
+        idx = (idx + 1) % matches.length;
+        input.value = matches[idx]+' ';
+        input.dataset.tabMatch = matches[idx];
+        appendHistory(matches.join('    '));
+      }
+    }
+  });
+
+  // Wrap original executeCommand to store in history
+  const originalExecute = window.executeCommand;
+  window.executeCommand = async function(cmd){
+    if(cmd && cmd.trim()) commandHistory.push(cmd.trim());
+    historyIndex = commandHistory.length;
+    if(originalExecute) await originalExecute(cmd);
+  };
+})();
+
+</script>
 </body>
 </html>
 
