@@ -31,15 +31,41 @@ Initializing TOSX — andrfp.co
   </section>
 </main>
 
-<!-- MAIN APP HIDDEN -->
+<!-- MAIN APP -->
 <div id="app-root" hidden aria-hidden="true">
-  <section id="terminal-root" role="application" aria-label="Terminal">
-    <div id="terminal-history" aria-live="polite" style="white-space:pre-wrap; font-family:monospace;"></div>
-    <div id="terminal-input-row">
-      <span id="terminal-prompt">andrfp:~$</span>
-      <input id="terminal-input" type="text" autocomplete="off" aria-label="terminal input" />
+  <!-- Desktop background -->
+  <div id="desktop" role="presentation" data-theme="clean-hacker">
+    
+    <!-- Terminal Window -->
+    <div id="terminal-window" role="application" aria-label="TOSX Terminal Window" data-glow="true" data-scanlines="true">
+      
+      <!-- Terminal Header -->
+      <div id="terminal-header" role="banner">
+        <span id="terminal-title">TOSX — andrfp.co</span>
+        <div id="terminal-controls">
+          <button id="term-minimize" aria-label="Minimize">—</button>
+          <button id="term-maximize" aria-label="Maximize">□</button>
+          <button id="term-close" aria-label="Close">×</button>
+        </div>
+      </div>
+
+      <!-- Terminal Body -->
+      <div id="terminal-body">
+        <div id="terminal-history" aria-live="polite" style="white-space:pre-wrap; font-family:monospace;"></div>
+        <div id="terminal-input-row">
+          <span id="terminal-prompt">andrfp:~$</span>
+          <input id="terminal-input" type="text" autocomplete="off" aria-label="terminal input" />
+        </div>
+      </div>
+
+      <!-- Optional Status Bar -->
+      <div id="terminal-status" role="status" aria-live="polite">
+        <span id="status-caps">CAPS</span> |
+        <span id="status-num">NUM</span> |
+        <span id="status-scroll">SCROLL</span>
+      </div>
     </div>
-  </section>
+  </div>
 </div>
 
 <script>
