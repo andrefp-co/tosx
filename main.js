@@ -143,7 +143,7 @@
       desc: "List your projects from JSON",
       action: async () => {
         try {
-          const res = await fetch('data/projects.json');
+          const res = await fetch('projects.json');
           const projects = await res.json();
           if(!projects.length) return "[projects] no projects yet";
           return projects.map(p=>`- ${p.name}: ${p.description}`).join('\n');
@@ -276,7 +276,7 @@
 // Projects App Integration
 (function(){
   const PROJECTS_COMMAND = COMMANDS.projects;
-  const PROJECTS_URL = 'data/projects.json';
+  const PROJECTS_URL = 'projects.json';
 
   // Extend the projects command to allow "projects open <index>"
   const originalProjectsAction = PROJECTS_COMMAND.action;
@@ -458,7 +458,7 @@
   projectsCmd.action = async function(args=[]){
     if(args[0] && args[0].toLowerCase() === 'random'){
       try {
-        const res = await fetch('data/projects.json');
+        const res = await fetch('projects.json');
         const projects = await res.json();
         if(!projects.length) return "[projects] no projects yet";
         const rand = projects[Math.floor(Math.random()*projects.length)];
